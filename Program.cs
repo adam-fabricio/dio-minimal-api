@@ -1,4 +1,9 @@
+using MinimalApi.Infraestrutura.Db;
+using MinimalApi.DTOs;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<DbContexto>();
+
 var app = builder.Build();
 
 app.MapGet("/", () => "Hello World!");
@@ -11,12 +16,4 @@ app.MapPost("/login", (LoginDTO loginDTO) => {
 });
 
 app.Run();
-
-public class LoginDTO
-{
-    public string Email { get; set; } = default!;
-    public string Senha { get; set; } = default!;
-};
-
-
 
