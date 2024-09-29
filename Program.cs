@@ -55,6 +55,12 @@ app.MapPost("/veiculos", ([FromBody] VeiculoDTO veiculoDTO, IVeiculoServico veic
 app.MapGet("/veiculo", ([FromQuery] int? pagina, IVeiculoServico veiculoservico) => {
     return Results.Ok(veiculoservico.Todos(pagina ?? 1));
 }).WithTags("Veiculos");
+
+app.MapGet("/veiculos/{id}",([FromRoute] int id, IVeiculoServico veiculoservico) => {
+    var veiculo = veiculoservico.BuscaPorId(id);
+    if (veiculo == null) return Results.NotFound();
+    return Results.Ok(veiculo);
+}).WithTags("Veiculos");
 #endregion
 
 #region App
