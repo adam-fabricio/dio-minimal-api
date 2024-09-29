@@ -5,12 +5,14 @@ using MinimalApi.Dominio.Interfaces;
 using dio_minimal_api.Dominio.Servicos;
 using Microsoft.AspNetCore.Mvc;
 using dio_minimal_api.Dominio.ModelViews;
+using MinimalApi.Dominio.Entidades;
 
 #region  Builder
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IAdministradorServico, AdministradorServico>();
+builder.Services.AddScoped<IVeiculoServico, VeiculoServico>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -24,7 +26,6 @@ builder.Services.AddDbContext<DbContexto>(options => {
 
 var app = builder.Build();
 #endregion
-
 
 #region Home
 app.MapGet("/", () => Results.Json(new Home()));
@@ -40,7 +41,16 @@ app.MapPost("/administradores/login", ([FromBody] LoginDTO loginDTO, IAdministra
 #endregion
 
 #region Veiculos
+app.MapPost("/veiculos", ([FromBody] VeiculoDTO veiculoDTO, IVeiculoServico veiculoServico) => {
+    var veiculo = new Veiculo{
+        Nome = veiculoDTO.Nome,
+        Marca = veiculoDTO.Marca,
+        Ano = veiculoDTO.Ano
+    };
+    veiculoServico.Incluir(veiculo);
 
+    return Results.Created($"/veiculo/{veiculo.Id}", veiculo);
+});
 #endregion
 
 #region App
