@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MinimalApi.Dominio.Interfaces;
 using dio_minimal_api.Dominio.Servicos;
 using Microsoft.AspNetCore.Mvc;
+using dio_minimal_api.Dominio.ModelViews;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +22,7 @@ builder.Services.AddDbContext<DbContexto>(options => {
 
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+app.MapGet("/", () => Results.Json(new Home()));
 
 app.MapPost("/login", ([FromBody] LoginDTO loginDTO, IAdministradorServico administradorServico) => {
     if (administradorServico.Login(loginDTO) != null)
