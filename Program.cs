@@ -6,6 +6,7 @@ using dio_minimal_api.Dominio.Servicos;
 using Microsoft.AspNetCore.Mvc;
 using dio_minimal_api.Dominio.ModelViews;
 using MinimalApi.Dominio.Entidades;
+using Microsoft.VisualBasic;
 
 #region  Builder
 
@@ -41,12 +42,35 @@ app.MapPost("/administradores/login", ([FromBody] LoginDTO loginDTO, IAdministra
 #endregion
 
 #region Veiculos
+
+ErrosDeValidacao validaDTO(VeiculoDTO veiculo)
+{
+    var validacao = new ErrosDeValidacao
+    {
+        Mensagens = new List<string>()
+    };
+
+    if (string.IsNullOrEmpty(veiculo.Nome))
+        validacao.Mensagens.Add("O nome não pode ser vazio");
+    if (string.IsNullOrEmpty(veiculo.Marca))
+        validacao.Mensagens.Add("A marca não pode ser vazia");
+    if (veiculo.Ano < 1885)
+        validacao.Mensagens.Add("O Ano está anterior da invenção do carro.");
+    if (veiculo.Ano > DateTime.Now.Year)
+        validacao.Mensagens.Add("O Ano está superior ao atual.");
+    return validacao;
+}
+
 app.MapPost("/veiculos", ([FromBody] VeiculoDTO veiculoDTO, IVeiculoServico veiculoServico) => {
     var veiculo = new Veiculo{
         Nome = veiculoDTO.Nome,
         Marca = veiculoDTO.Marca,
         Ano = veiculoDTO.Ano
     };
+    ErrosDeValidacao validacao = validaDTO(veiculoDTO);
+    if (validacao.Mensagens.Count > 0)
+        return Results.BadRequest(validacao);
+    
     veiculoServico.Incluir(veiculo);
 
     return Results.Created($"/veiculo/{veiculo.Id}", veiculo);
@@ -66,7 +90,13 @@ app.MapPut("/veiculos/{id}",([FromRoute] int id,
             VeiculoDTO veiculoDTO, 
             IVeiculoServico veiculoServico) => {
     var veiculo = veiculoServico.BuscaPorId(id);
-    if (veiculo == null) return Results.NotFound();
+    if (veiculo == null) 
+        return Results.NotFound();
+    
+    ErrosDeValidacao validacao = validaDTO(veiculoDTO);
+    if (validacao.Mensagens.Count > 0)
+        return Results.BadRequest(validacao);
+    
     veiculo.Nome = veiculoDTO.Nome;
     veiculo.Marca = veiculoDTO.Marca;
     veiculo.Ano = veiculoDTO.Ano;
