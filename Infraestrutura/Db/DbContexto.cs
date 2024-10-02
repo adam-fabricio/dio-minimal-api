@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using dio_minimal_api.Dominio.Enums;
 using Microsoft.EntityFrameworkCore;
 using MinimalApi.Dominio.Entidades;
 

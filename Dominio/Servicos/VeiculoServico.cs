@@ -50,6 +50,5 @@ namespace dio_minimal_api.Dominio.Servicos
 
             return query.ToList();
         }
-
     }
 }

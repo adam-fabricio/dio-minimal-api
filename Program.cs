@@ -6,7 +6,10 @@ using dio_minimal_api.Dominio.Servicos;
 using Microsoft.AspNetCore.Mvc;
 using dio_minimal_api.Dominio.ModelViews;
 using MinimalApi.Dominio.Entidades;
-using Microsoft.VisualBasic;
+using dio_minimal_api.Dominio.DTOs;
+using dio_minimal_api.Dominio.Enums;
+
+
 
 #region  Builder
 
@@ -33,13 +36,106 @@ app.MapGet("/", () => Results.Json(new Home())).WithTags("Home");
 #endregion
 
 #region Administradores
-app.MapPost("/administradores/login", ([FromBody] LoginDTO loginDTO, IAdministradorServico administradorServico) => {
+
+app.MapPost("/administradores/login", 
+            (
+                [FromBody] LoginDTO loginDTO,
+                IAdministradorServico administradorServico
+            ) => 
+{
     if (administradorServico.Login(loginDTO) != null)
         return Results.Ok("Login com sucesso");
     else
         return Results.Unauthorized();
 }).WithTags("Administradores");
+
+app.MapPost("administradores", ([FromBody] AdministradorDTO usuario, 
+                                IAdministradorServico administradorServico) =>
+{
+    ErrosDeValidacao validacao = new()
+    {
+        Mensagens = []
+    };
+
+
+    if (string.IsNullOrEmpty(usuario.Email))
+        validacao.Mensagens.Add("O Email não pode ser vazio");
+    if (string.IsNullOrEmpty(usuario.Senha))
+        validacao.Mensagens.Add("A senha não pode ser vazia");
+    if (usuario.Perfil == null)
+        validacao.Mensagens.Add("O Perfil não pode ser nulo");
+    
+    if (validacao.Mensagens.Count > 0)
+        return Results.BadRequest(validacao);
+        
+
+    var novoUsuario = new Administrador
+    {
+        Email = usuario.Email ?? string.Empty,
+        Senha = usuario.Senha ?? string.Empty,
+        Perfil = usuario.Perfil.ToString() ?? string.Empty
+    };
+
+    administradorServico.Incluir(novoUsuario);
+
+    var usuarioView = new AdministradorModelView
+    {
+        Id = novoUsuario.Id,
+        Email = novoUsuario.Email,
+        Perfil = novoUsuario.Perfil
+    };
+    
+    return Results.Created($"/administradores/{novoUsuario.Id}", usuarioView);
+
+}).WithTags("Administradores");
+
+app.MapGet("/administradores", (
+    [FromQuery] int? pagina, IAdministradorServico administradorServico) =>
+    {
+        var administradores = administradorServico.Todos(pagina ?? 1);
+        var adms = new List<AdministradorModelView>();
+        
+        foreach(var adm in administradores)
+            adms.Add(new AdministradorModelView
+            {
+                Id = adm.Id,
+                Email = adm.Email,
+                Perfil = adm.Perfil
+            });
+        
+        return Results.Ok(adms);
+    }
+).WithTags("Administradores");
+
+app.MapGet("/administraodores/{id}",(
+    [FromRoute] int id, IAdministradorServico administradorServico) => 
+    {
+        var usuario = administradorServico.BuscaPorId(id);
+        if (usuario == null)
+            return Results.NotFound();
+
+        return Results.Ok(usuario);
+
+    }).WithTags("Administradores");
+
+
+app.MapDelete("/administradores/{id}", (
+    [FromRoute] int id, IAdministradorServico administradorServico) =>
+    {
+        var usuario = administradorServico.BuscaPorId(id);
+        if (usuario == null)
+            return Results.NotFound();
+
+        administradorServico.Deletar(usuario);
+        
+        return Results.Ok(usuario);
+    }
+).WithTags("Administradores");
+
+
 #endregion
+
+
 
 #region Veiculos
 
@@ -47,7 +143,7 @@ ErrosDeValidacao validaDTO(VeiculoDTO veiculo)
 {
     var validacao = new ErrosDeValidacao
     {
-        Mensagens = new List<string>()
+        Mensagens = []
     };
 
     if (string.IsNullOrEmpty(veiculo.Nome))
@@ -118,5 +214,4 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.Run();
-
 #endregion
