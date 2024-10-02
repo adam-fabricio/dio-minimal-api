@@ -7,8 +7,8 @@ namespace dio_minimal_api.Dominio.ModelViews
 {
     public class UsuarioLogado
     {
-        public string Email { get; set; }
-        public string Perfil { get; set; }
-        public string Token { get; set; }
+        public string? Email { get; set; }
+        public string? Perfil { get; set; }
+        public string? Token { get; set; }
     }
 }
